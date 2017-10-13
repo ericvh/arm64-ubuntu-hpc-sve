@@ -1,19 +1,14 @@
-FROM ericvh/arm64-ubuntu-dev
+FROM ericvh/arm64-ubuntu-hpc
 MAINTAINER Eric Van Hensbergen <ericvh@gmail.com>
 # if you don't have qemu-user-static installed these will fail
 # if you don't have binfmt-support setup right, these will fail
-RUN apt-get install -y bison flex
+RUN apt-get install -y bison flex texi2html python-pkgconfig wget
 RUN apt-get clean
-# copy in arm64 tarballs for binfmt and gcc (or build it)
-ADD gcc-sve.tar.gz /
-# copy in armie, install and clean?
-WORKDIR /tmp
-ADD ARMIEGENUB14-LB-01-r1p0-02rel1.tgz /tmp
-RUN /tmp/ARM-Instruction-Emulator_1.2.1_AArch64_Ubuntu_14.04_aarch64/arm-instruction-emulator-1.2.1_Generic-AArch64_Ubuntu-14.04_aarch64-linux-deb.sh -a
-RUN cp /tmp/ARM-Instruction-Emulator_1.2.1_AArch64_Ubuntu_14.04_aarch64/EULA.txt /etc/motd
-RUN cp /tmp/ARM-Instruction-Emulator_1.2.1_AArch64_Ubuntu_14.04_aarch64/*.txt /opt/arm
-RUN rm -rf /tmp/*
-ENV PATH /opt/arm/arm-instruction-emulator-1.2.1_Generic-AArch64_Ubuntu-14.04_aarch64-linux/bin:/usr/local/gcc-sve/bin:$PATH
+WORKDIR /usr/local/src
+# binutils
+RUN wget http://ftp.gnu.org/gnu/binutils/binutils-2.29.tar.gz && tar xzf binutils-2.29.tar.gz && cd binutils-2.29 && ./configure && make -j && make install && cd .. && rm -rf binutils-*
+# gcc
+RUN git clone --depth 1 -b linaro-dev/sve git://gcc.gnu.org/git/gcc.git && cd gcc && ./contrib/download_prerequisites && mkdir objdir && cd objdir && ../configure --disable-werror --enable-languages=c,c++,fortran,go && make -j && make install && cd ../.. && rm -rf gcc
 WORKDIR /root
 ADD bashrc /root/.bashrc
 VOLUME ["/home"]

@@ -1,1 +1,1 @@
-more /etc/motd
+echo SVE enabled tools are in /usr/local/bin
